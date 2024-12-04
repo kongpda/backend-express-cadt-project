@@ -1,11 +1,16 @@
 {
-  "name": "backend-express-cadt-project",
-  "version": "0.0.1",
-  "description": "cadt express project",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "kongpda",
-  "license": "ISC"
+    "name": "backend-express-cadt-project",
+    "version": "0.0.1",
+    "description": "cadt express project",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js",
+        "dev": "nodemon app.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "kongpda",
+    "license": "ISC",
+    "dependencies": {
+        "express": "^4.21.1"
+    }
 }
