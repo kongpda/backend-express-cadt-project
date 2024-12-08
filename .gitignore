@@ -1,6 +1,6 @@
 # Dependencies
 node_modules/
-package-lock.json
+
 
 # Production
 /build
@@ -10,4 +10,11 @@ package-lock.json
 # Environment files
 .env
 .env.local
-.env.production.local
+.env.*.local
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+*.db
+node_modules
+.env
