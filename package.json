@@ -6,7 +6,9 @@
     "scripts": {
         "start": "node src/app.js",
         "dev": "nodemon src/app.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "npx stepci run stepci/workflow.yml",
+        "test:api": "npx stepci run",
+        "test:monitor": "npx stepci monitor stepci/workflow.yml"
     },
     "prisma": {
         "seed": "node prisma/seed.js"
@@ -28,6 +30,7 @@
     "devDependencies": {
         "dotenv": "^16.4.7",
         "nodemon": "^3.1.7",
-        "prisma": "^6.0.1"
+        "prisma": "^6.0.1",
+        "stepci": "^2.8.2"
     }
 }

@@ -19,8 +19,8 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // Health check
-app.get('/health', (req, res) => {
-    res.json({ status: 'OK' });
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'OK' });
 });
 
 // Error handling
