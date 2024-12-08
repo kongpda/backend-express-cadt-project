@@ -15,7 +15,6 @@ services:
     volumes:
       - ../:/app
       - /app/node_modules
-    user: "node"
     command: sh -c "npx prisma migrate deploy && npm run dev"
 
   postgres:
