@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
     provider = "prisma-client-js"
 }
@@ -13,33 +10,66 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+    user
+    admin
+    moderator
+}
+
+enum UserStatus {
+    active
+    inactive
+    suspended
+}
+
+enum EventStatus {
+    draft
+    published
+    cancelled
+}
+
 model User {
-    id        Int      @id @default(autoincrement())
-    email     String   @unique
-    name      String?
-    events    Event[] // Events organized by the user
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+    id        Int        @id @default(autoincrement())
+    email     String     @unique
+    name      String
+    role      UserRole   @default(user)
+    status    UserStatus @default(active)
+    events    Event[]    // Events organized by the user
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+
+    @@index([email])
+    @@index([status])
+    @@index([role])
 }
 
 model Category {
     id          Int      @id @default(autoincrement())
-    name        String
+    name        String   @unique
     description String?
     events      Event[]
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
+
+    @@index([name])
 }
 
 model Event {
-    id          Int      @id @default(autoincrement())
+    id          Int         @id @default(autoincrement())
     title       String
-    description String?
+    description String
     date        DateTime
-    category    Category @relation(fields: [categoryId], references: [id])
+    location    String?
+    status      EventStatus @default(draft)
+    category    Category    @relation(fields: [categoryId], references: [id])
     categoryId  Int
-    organizer   User     @relation(fields: [organizerId], references: [id])
+    organizer   User        @relation(fields: [organizerId], references: [id])
     organizerId Int
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+
+    @@index([status])
+    @@index([date])
+    @@index([categoryId])
+    @@index([organizerId])
 }
