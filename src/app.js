@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 
 app.get("/", function(req, res) {
-    return res.send("Hello World from Express");
+    return res.send("Hello World from GG Express");
 });
 // Health check endpoint (good practice for Docker)
 app.get('/health', (req, res) => {
