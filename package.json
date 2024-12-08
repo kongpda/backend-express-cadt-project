@@ -4,9 +4,12 @@
     "description": "cadt express project",
     "main": "app.js",
     "scripts": {
-        "start": "node app.js",
-        "dev": "nodemon app.js",
+        "start": "node src/app.js",
+        "dev": "nodemon src/app.js",
         "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "prisma": {
+        "seed": "node prisma/seed.js"
     },
     "author": "kongpda",
     "license": "ISC",
