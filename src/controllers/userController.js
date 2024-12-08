@@ -90,7 +90,95 @@ const userController = {
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
+  },
+
+  /**
+   * @swagger
+   * /api/users/{id}:
+   *   put:
+   *     summary: Update a user
+   *     tags: [Users]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: User ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               email:
+   *                 type: string
+   *               name:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: User updated successfully
+   *       404:
+   *         description: User not found
+   *       500:
+   *         description: Server error
+   */
+  async updateUser(req, res) {
+    try {
+      const { id } = req.params;
+      const { email, name } = req.body;
+      const user = await prisma.user.update({
+        where: { id: parseInt(id) },
+        data: { email, name },
+      });
+      res.json(user);
+    } catch (error) {
+      if (error.code === 'P2025') {
+        res.status(404).json({ error: 'User not found' });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
+    }
+  },
+
+  /**
+   * @swagger
+   * /api/users/{id}:
+   *   delete:
+   *     summary: Delete a user
+   *     tags: [Users]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: User ID
+   *     responses:
+   *       200:
+   *         description: User deleted successfully
+   *       404:
+   *         description: User not found
+   *       500:
+   *         description: Server error
+   */
+  async deleteUser(req, res) {
+    try {
+      const { id } = req.params;
+      await prisma.user.delete({
+        where: { id: parseInt(id) },
+      });
+      res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+      if (error.code === 'P2025') {
+        res.status(404).json({ error: 'User not found' });
+      } else {
+        res.status(500).json({ error: error.message });
+      }
+    }
   }
 };
+
 
 module.exports = userController;

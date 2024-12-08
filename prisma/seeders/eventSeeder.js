@@ -31,4 +31,4 @@ async function seedEvents() {
   }
 }
 
-module.exports = seedEvents 
+module.exports = seedEvents
