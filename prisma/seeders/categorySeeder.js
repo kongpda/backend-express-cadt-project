@@ -4,25 +4,49 @@ const prisma = new PrismaClient()
 async function seedCategories() {
   const categories = [
     {
-      name: 'Conference',
-      description: 'Professional networking events',
+      name: 'Music & Concerts',
+      description: 'Live music performances, concerts, and musical events',
+      slug: 'music-concerts'
     },
     {
-      name: 'Workshop',
-      description: 'Hands-on learning sessions',
+      name: 'Technology',
+      description: 'Tech conferences, workshops, and meetups',
+      slug: 'technology'
     },
     {
-      name: 'Meetup',
-      description: 'Casual community gatherings',
+      name: 'Business & Professional',
+      description: 'Networking events, conferences, and business seminars',
+      slug: 'business-professional'
     },
+    {
+      name: 'Arts & Culture',
+      description: 'Art exhibitions, cultural festivals, and performances',
+      slug: 'arts-culture'
+    },
+    {
+      name: 'Sports & Fitness',
+      description: 'Sporting events, tournaments, and fitness activities',
+      slug: 'sports-fitness'
+    },
+    {
+      name: 'Education',
+      description: 'Educational workshops, seminars, and training sessions',
+      slug: 'education'
+    },
+    {
+      name: 'Food & Drink',
+      description: 'Food festivals, cooking classes, and tasting events',
+      slug: 'food-drink'
+    }
   ]
 
-  console.log('Seeding categories...')
   for (const category of categories) {
     await prisma.category.create({
-      data: category,
+      data: category
     })
   }
+
+  console.log('Categories seeded successfully')
 }
 
-module.exports = seedCategories 
+module.exports = seedCategories

@@ -14,6 +14,8 @@ enum UserRole {
     user
     admin
     moderator
+    organizer
+    superAdmin
 }
 
 enum UserStatus {
@@ -26,50 +28,195 @@ enum EventStatus {
     draft
     published
     cancelled
+    completed
+}
+
+enum TicketType {
+    free
+    paid
+    donation
+}
+
+enum OrganizationStatus {
+    pending
+    approved
+    rejected
+    suspended
+}
+
+enum ProfileVisibility {
+    public
+    private
 }
 
 model User {
-    id        Int        @id @default(autoincrement())
-    email     String     @unique
-    name      String
-    role      UserRole   @default(user)
-    status    UserStatus @default(active)
-    events    Event[]    // Events organized by the user
-    createdAt DateTime   @default(now())
-    updatedAt DateTime   @updatedAt
+    id              Int           @id @default(autoincrement())
+    email           String        @unique
+    name            String
+    password        String
+    role            UserRole      @default(user)
+    status          UserStatus    @default(active)
+    profile         Profile? // One-to-one relation with Profile
+    organization    Organization? // One-to-one relation with Organization
+    organizedEvents Event[]       @relation("EventOrganizer")
+    tickets         Ticket[]
+    comments        Comment[]
+    favorites       Favorite[]
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
 
     @@index([email])
     @@index([status])
     @@index([role])
 }
 
+model Profile {
+    id           Int               @id @default(autoincrement())
+    username     String            @unique
+    bio          String?           @db.Text
+    location     String?
+    website      String?
+    phone        String?
+    profileImage String?
+    coverImage   String?
+    socialLinks  Json? // Store social media links
+    interests    String[]
+    visibility   ProfileVisibility @default(public)
+    // Relations
+    user         User              @relation(fields: [userId], references: [id])
+    userId       Int               @unique // One-to-one relation
+    createdAt    DateTime          @default(now())
+    updatedAt    DateTime          @updatedAt
+
+    @@index([username])
+    @@index([visibility])
+}
+
+model Organization {
+    id          Int                @id @default(autoincrement())
+    name        String
+    description String?            @db.Text
+    logo        String?
+    website     String?
+    status      OrganizationStatus @default(pending)
+    // Organization verification details
+    verifiedAt  DateTime?
+    taxId       String?
+    address     String?
+    city        String?
+    country     String?
+    // Relations
+    user        User               @relation(fields: [userId], references: [id])
+    userId      Int                @unique // One-to-one relation
+    events      Event[]
+    createdAt   DateTime           @default(now())
+    updatedAt   DateTime           @updatedAt
+
+    @@index([status])
+}
+
 model Category {
     id          Int      @id @default(autoincrement())
     name        String   @unique
     description String?
+    slug        String   @unique
     events      Event[]
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
     @@index([name])
+    @@index([slug])
 }
 
 model Event {
-    id          Int         @id @default(autoincrement())
-    title       String
-    description String
-    date        DateTime
-    location    String?
-    status      EventStatus @default(draft)
-    category    Category    @relation(fields: [categoryId], references: [id])
-    categoryId  Int
-    organizer   User        @relation(fields: [organizerId], references: [id])
-    organizerId Int
-    createdAt   DateTime    @default(now())
-    updatedAt   DateTime    @updatedAt
+    id               Int           @id @default(autoincrement())
+    title            String
+    slug             String        @unique
+    description      String        @db.Text
+    shortDescription String?       @db.Text
+    startDate        DateTime
+    endDate          DateTime
+    location         String?
+    venue            String?
+    address          String?
+    city             String?
+    country          String?
+    status           EventStatus   @default(draft)
+    maxAttendees     Int?
+    coverImage       String?
+    category         Category      @relation(fields: [categoryId], references: [id])
+    categoryId       Int
+    organizer        User          @relation("EventOrganizer", fields: [organizerId], references: [id])
+    organizerId      Int
+    tickets          Ticket[]
+    comments         Comment[]
+    favorites        Favorite[]
+    tags             Tag[]
+    createdAt        DateTime      @default(now())
+    updatedAt        DateTime      @updatedAt
+    organization     Organization? @relation(fields: [organizationId], references: [id])
+    organizationId   Int?
 
     @@index([status])
-    @@index([date])
+    @@index([startDate])
     @@index([categoryId])
     @@index([organizerId])
+    @@index([slug])
+    @@index([organizationId])
+}
+
+model Ticket {
+    id          Int        @id @default(autoincrement())
+    type        TicketType @default(free)
+    name        String
+    description String?
+    price       Decimal    @default(0) @db.Decimal(10, 2)
+    quantity    Int
+    available   Int
+    event       Event      @relation(fields: [eventId], references: [id])
+    eventId     Int
+    user        User?      @relation(fields: [userId], references: [id])
+    userId      Int?
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
+
+    @@index([eventId])
+    @@index([userId])
+}
+
+model Comment {
+    id        Int      @id @default(autoincrement())
+    content   String   @db.Text
+    event     Event    @relation(fields: [eventId], references: [id])
+    eventId   Int
+    user      User     @relation(fields: [userId], references: [id])
+    userId    Int
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([eventId])
+    @@index([userId])
+}
+
+model Favorite {
+    id        Int      @id @default(autoincrement())
+    event     Event    @relation(fields: [eventId], references: [id])
+    eventId   Int
+    user      User     @relation(fields: [userId], references: [id])
+    userId    Int
+    createdAt DateTime @default(now())
+
+    @@unique([eventId, userId])
+    @@index([eventId])
+    @@index([userId])
+}
+
+model Tag {
+    id        Int      @id @default(autoincrement())
+    name      String   @unique
+    events    Event[]
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([name])
 }
