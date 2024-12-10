@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const categoryController = require('../controllers/categoryController');
+const categoryController = require('../controllers/category.controller');
 
 // Middleware to validate category ID
 const validateCategoryId = (req, res, next) => {
