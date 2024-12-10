@@ -1,0 +1,154 @@
+name: Category API Tests
+version: "1.1"
+env:
+  baseUrl: http://localhost:3000/api
+
+tests:
+  auth_setup:
+    steps:
+      - name: Login as admin
+        http:
+          url: "{{baseUrl}}/auth/login"
+          method: POST
+          json:
+            email: "admin@example.com"
+            password: "admin123"
+        check:
+          status: 200
+        assign:
+          token: "{{response.body.token}}"
+
+  create_category:
+    steps:
+      - name: Create new category
+        http:
+          url: "{{baseUrl}}/categories"
+          method: POST
+          headers:
+            Authorization: "Bearer {{token}}"
+          json:
+            name: "Test Category"
+            description: "Test Description"
+        check:
+          status: 201
+          json:
+            name: "Test Category"
+            description: "Test Description"
+        assign:
+          categoryId: "{{response.body.id}}"
+
+      - name: Try create duplicate category
+        http:
+          url: "{{baseUrl}}/categories"
+          method: POST
+          headers:
+            Authorization: "Bearer {{token}}"
+          json:
+            name: "Test Category"
+        check:
+          status: 409
+
+  get_categories:
+    steps:
+      - name: Get all categories
+        http:
+          url: "{{baseUrl}}/categories"
+          method: GET
+          headers:
+            Authorization: "Bearer {{token}}"
+          query:
+            page: 1
+            limit: 10
+        check:
+          status: 200
+          schema:
+            type: object
+            required: [categories, total, page, totalPages]
+
+      - name: Search categories
+        http:
+          url: "{{baseUrl}}/categories"
+          method: GET
+          headers:
+            Authorization: "Bearer {{token}}"
+          query:
+            search: "Test"
+        check:
+          status: 200
+          schema:
+            type: object
+            properties:
+              categories:
+                type: array
+
+  get_category:
+    steps:
+      - name: Get category by ID
+        http:
+          url: "{{baseUrl}}/categories/{{categoryId}}"
+          method: GET
+          headers:
+            Authorization: "Bearer {{token}}"
+        check:
+          status: 200
+          json:
+            id: "{{categoryId}}"
+            name: "Test Category"
+
+      - name: Try get non-existent category
+        http:
+          url: "{{baseUrl}}/categories/99999"
+          method: GET
+          headers:
+            Authorization: "Bearer {{token}}"
+        check:
+          status: 404
+
+  update_category:
+    steps:
+      - name: Update category
+        http:
+          url: "{{baseUrl}}/categories/{{categoryId}}"
+          method: PUT
+          headers:
+            Authorization: "Bearer {{token}}"
+          json:
+            name: "Updated Category"
+            description: "Updated Description"
+        check:
+          status: 200
+          json:
+            name: "Updated Category"
+            description: "Updated Description"
+
+  delete_category:
+    steps:
+      - name: Delete category
+        http:
+          url: "{{baseUrl}}/categories/{{categoryId}}"
+          method: DELETE
+          headers:
+            Authorization: "Bearer {{token}}"
+        check:
+          status: 204
+
+      - name: Verify category is deleted
+        http:
+          url: "{{baseUrl}}/categories/{{categoryId}}"
+          method: GET
+          headers:
+            Authorization: "Bearer {{token}}"
+        check:
+          status: 404
+
+config:
+  responseValidation: true
+
+assertions:
+  - name: Response times under 200ms
+    check:
+      responseTime: {less_than: 200}
+
+  - name: Valid JSON responses
+    check:
+      contentType: application/json
