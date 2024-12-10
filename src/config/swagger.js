@@ -4,9 +4,9 @@ const options = {
     definition: {
         openapi: '3.0.0',
         info: {
-            title: 'User API Documentation',
+            title: 'CADT API Documentation',
             version: '1.0.0',
-            description: 'API documentation for User Management',
+            description: 'API documentation for User and Event Management',
         },
         servers: [
             {
@@ -14,8 +14,21 @@ const options = {
                 description: 'Development server',
             },
         ],
+        tags: [
+            {
+                name: 'Users',
+                description: 'User management endpoints'
+            },
+            {
+                name: 'Events',
+                description: 'Event management endpoints'
+            }
+        ]
     },
-    apis: ['./src/controllers/*.js'], // Path to the API docs
+    apis: [
+        './src/controllers/*.js',
+        './src/routes/*.js'
+    ],
 };
 
 const specs = swaggerJsdoc(options);

@@ -1,0 +1,51 @@
+name: API Test Workflow
+version: "1.1"
+env:
+  baseUrl: http://localhost:3000/api
+
+tests:
+  health_check:
+    steps:
+      - name: API Health Check
+        http:
+          url: ${{env.baseUrl}}/health
+          method: GET
+        check:
+          status: 200
+          json:
+            status: "OK"
+          responseTime: {less_than: 500}
+
+  auth_tests:
+    steps:
+      - name: Import Auth Tests
+        import: auth.test.yml
+
+  category_tests:
+    steps:
+      - name: Import Category Tests
+        import: category.test.yml
+
+  event_tests:
+    steps:
+      - name: Import Event Tests
+        import: event.test.yml
+
+  user_tests:
+    steps:
+      - name: Import User Tests
+        import: user.test.yml
+
+config:
+  responseValidation: true
+  performance:
+    maxResponseTime: 200
+
+assertions:
+  - name: All endpoints return valid status codes
+    check:
+      status: {in: [200, 201, 204, 400, 401, 403, 404, 409]}
+
+  - name: All JSON responses are valid
+    check:
+      contentType: application/json
