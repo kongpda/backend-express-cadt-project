@@ -5,6 +5,14 @@ const { validationResult } = require('express-validator');
 
 const prisma = new PrismaClient();
 
+// Define allowed roles and their hierarchy
+const ROLES = {
+    user: 0,
+    moderator: 1,
+    admin: 2,
+    superAdmin: 3
+};
+
 /**
  * @swagger
  * components:
@@ -72,7 +80,7 @@ class AuthController {
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { email, password, name } = req.body;
+      const { email, password, name, role } = req.body;
 
       // Check if user exists
       const existingUser = await prisma.user.findUnique({
@@ -85,6 +93,13 @@ class AuthController {
         });
       }
 
+      // In production, only allow setting privileged roles through admin panel
+      // For testing purposes, only allow superAdmin role if NODE_ENV is test
+      let userRole = 'user';
+      if (process.env.NODE_ENV === 'test' && role === 'superAdmin') {
+        userRole = 'superAdmin';
+      }
+
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -94,6 +109,7 @@ class AuthController {
           email,
           password: hashedPassword,
           name,
+          role: userRole,
           profile: {
             create: {
               username: email.split('@')[0], // Default username from email
@@ -240,21 +256,33 @@ class AuthController {
     try {
       const user = await prisma.user.findUnique({
         where: { id: req.user.userId },
-        include: {
-          profile: true,
-        },
         select: {
           id: true,
           email: true,
           name: true,
           role: true,
-          profile: true,
-        },
+          status: true,
+          profile: {
+            select: {
+              id: true,
+              username: true,
+              bio: true,
+              location: true,
+              website: true,
+              phone: true,
+              profileImage: true,
+              coverImage: true,
+              socialLinks: true,
+              interests: true,
+              visibility: true
+            }
+          }
+        }
       });
 
       if (!user) {
         return res.status(404).json({
-          message: 'User not found',
+          message: 'User not found'
         });
       }
 
@@ -263,8 +291,46 @@ class AuthController {
       console.error('Get current user error:', error);
       res.status(500).json({
         message: 'Error fetching user profile',
-        error: error.message,
+        error: error.message
       });
+    }
+  }
+
+  async cleanupTestUsers(req, res) {
+    try {
+      if (process.env.NODE_ENV !== 'test') {
+        return res.status(403).json({ message: 'This endpoint is only available in test environment' });
+      }
+
+      const { emails } = req.body;
+      if (!emails || !Array.isArray(emails)) {
+        return res.status(400).json({ message: 'Invalid emails array provided' });
+      }
+
+      // Delete profiles first due to foreign key constraint
+      await prisma.profile.deleteMany({
+        where: {
+          user: {
+            email: {
+              in: emails
+            }
+          }
+        }
+      });
+
+      // Then delete users
+      await prisma.user.deleteMany({
+        where: {
+          email: {
+            in: emails
+          }
+        }
+      });
+
+      return res.status(200).json({ message: 'Test users cleaned up successfully' });
+    } catch (error) {
+      console.error('Cleanup error:', error);
+      return res.status(500).json({ message: 'Error cleaning up test users', error: error.message });
     }
   }
 }

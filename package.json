@@ -6,8 +6,10 @@
     "scripts": {
         "start": "node src/app.js",
         "dev": "nodemon src/app.js",
-        "test": "npx stepci run stepci/workflow.yml",
-        "test:api": "npx stepci run",
+        "dev:test": "NODE_ENV=test nodemon src/server.js",
+        "test": "NODE_ENV=test npx playwright test",
+        "test:api": "NODE_ENV=test npx stepci run",
+        "test:debug": "NODE_ENV=test npx playwright test --debug",
         "test:monitor": "npx stepci monitor stepci/workflow.yml"
     },
     "prisma": {

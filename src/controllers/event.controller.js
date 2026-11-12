@@ -9,7 +9,9 @@ const prisma = require('../config/database');
  *       required:
  *         - title
  *         - description
- *         - date
+ *         - startDate
+ *         - endDate
+ *         - categoryId
  *       properties:
  *         id:
  *           type: integer
@@ -17,28 +19,57 @@ const prisma = require('../config/database');
  *         title:
  *           type: string
  *           description: The title of the event
+ *         slug:
+ *           type: string
+ *           description: URL-friendly version of the title
  *         description:
  *           type: string
- *           description: The description of the event
- *         date:
+ *           description: The full description of the event
+ *         shortDescription:
+ *           type: string
+ *           description: A brief description of the event
+ *         startDate:
  *           type: string
  *           format: date-time
- *           description: The date and time of the event
+ *           description: The start date and time of the event
+ *         endDate:
+ *           type: string
+ *           format: date-time
+ *           description: The end date and time of the event
  *         location:
  *           type: string
- *           description: The location of the event
+ *           description: General location of the event
+ *         venue:
+ *           type: string
+ *           description: Specific venue name
+ *         address:
+ *           type: string
+ *           description: Street address
+ *         city:
+ *           type: string
+ *           description: City name
+ *         country:
+ *           type: string
+ *           description: Country name
  *         status:
  *           type: string
- *           enum: [draft, published, cancelled]
+ *           enum: [draft, published, cancelled, completed]
  *           description: The status of the event
- *         createdAt:
+ *         maxAttendees:
+ *           type: integer
+ *           description: Maximum number of attendees
+ *         coverImage:
  *           type: string
- *           format: date-time
- *           description: The date the event was created
- *         updatedAt:
- *           type: string
- *           format: date-time
- *           description: The date the event was last updated
+ *           description: URL of the event cover image
+ *         categoryId:
+ *           type: integer
+ *           description: ID of the event category
+ *         organizerId:
+ *           type: integer
+ *           description: ID of the event organizer
+ *         organizationId:
+ *           type: integer
+ *           description: Optional ID of the associated organization
  */
 
 const eventController = {
@@ -66,30 +97,71 @@ const eventController = {
      */
     createEvent: async (req, res) => {
         try {
-            const { title, description, date, location, status = 'draft' } = req.body;
+            const {
+                title,
+                description,
+                shortDescription,
+                startDate,
+                endDate,
+                location,
+                venue,
+                address,
+                city,
+                country,
+                status = 'draft',
+                maxAttendees,
+                coverImage,
+                categoryId,
+                organizationId
+            } = req.body;
 
             // Basic validation
-            if (!title || !description || !date) {
+            if (!title || !description || !startDate || !endDate || !categoryId) {
                 return res.status(400).json({
-                    error: 'Title, description, and date are required'
+                    error: 'Title, description, startDate, endDate, and categoryId are required'
                 });
             }
 
-            // Validate date format
-            const dateObj = new Date(date);
-            if (isNaN(dateObj.getTime())) {
+            // Validate dates
+            const startDateObj = new Date(startDate);
+            const endDateObj = new Date(endDate);
+
+            if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
                 return res.status(400).json({
                     error: 'Invalid date format'
                 });
             }
 
+            if (endDateObj < startDateObj) {
+                return res.status(400).json({
+                    error: 'End date must be after start date'
+                });
+            }
+
+            // Generate slug from title
+            const slug = title.toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/(^-|-$)+/g, '');
+
             const event = await prisma.event.create({
                 data: {
                     title,
+                    slug,
                     description,
-                    date: dateObj,
+                    shortDescription,
+                    startDate: startDateObj,
+                    endDate: endDateObj,
                     location,
-                    status
+                    venue,
+                    address,
+                    city,
+                    country,
+                    status,
+                    maxAttendees,
+                    coverImage,
+                    categoryId,
+                    organizerId: req.user.id, // Assuming you have user info in request
+                    organizationId
                 }
             });
 
@@ -162,7 +234,7 @@ const eventController = {
                 skip: parseInt(skip),
                 take: parseInt(limit),
                 orderBy: {
-                    date: 'desc'
+                    startDate: 'desc'
                 }
             });
 

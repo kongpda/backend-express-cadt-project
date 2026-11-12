@@ -22,4 +22,9 @@ router.post('/register', registerValidation, authController.register);
 router.post('/login', loginValidation, authController.login);
 router.get('/me', authMiddleware, authController.getCurrentUser);
 
+// Test environment routes
+if (process.env.NODE_ENV === 'test') {
+  router.delete('/cleanup-test-users', authController.cleanupTestUsers);
+}
+
 module.exports = router;

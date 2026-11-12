@@ -1,20 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const eventController = require('../controllers/event.controller');
+const authMiddleware = require('../middleware/auth.middleware');
+const checkEventOwnership = require('../middleware/checkEventOwnership.middleware');
 
-// Create a new event
-router.post('/', eventController.createEvent);
-
-// Get all events
+// Public routes
 router.get('/', eventController.getEvents);
-
-// Get a single event by ID
 router.get('/:id', eventController.getEventById);
 
-// Update an event
-router.put('/:id', eventController.updateEvent);
-
-// Delete an event
-router.delete('/:id', eventController.deleteEvent);
+// Protected routes (require authentication)
+router.post('/', authMiddleware, eventController.createEvent);
+router.put('/:id', authMiddleware, checkEventOwnership, eventController.updateEvent);
+router.delete('/:id', authMiddleware, checkEventOwnership, eventController.deleteEvent);
 
 module.exports = router;
